@@ -21,6 +21,16 @@ from .models import build_hex_color_profile, Config
 from .neofetch_util import *
 from .presets import PRESETS, ColorProfile
 
+def get_random_alignment(preset: ColorProfile, asc: str) -> ColorAlignment:
+    pis = list(range(len(preset.unique_colors().colors)))
+    slots = list(set(map(int, re.findall('(?<=\\${c)[0-9](?=})', asc))))
+    while len(pis) < len(slots):
+        pis += pis
+    perm = {p[:len(slots)] for p in islice(permutations(pis), 1000)}
+
+    choice = {slots[i]: n for i,n in enumerate(random.choice(sorted(perm)))}
+    print(choice)
+    return ColorAlignment("custom", custom_colors=choice)
 
 def check_config(path) -> Config:
     """
@@ -316,7 +326,7 @@ def create_config() -> Config:
     # later iterations
     hv_arrangements = [
         ('Horizontal', ColorAlignment('horizontal', fore_back=fore_back)),
-        ('Vertical', ColorAlignment('vertical'))
+        ('Vertical', ColorAlignment('vertical')),
     ]
     arrangements = hv_arrangements.copy()
 
@@ -351,14 +361,14 @@ def create_config() -> Config:
         printc(f'You can choose standard horizontal or vertical alignment, or use one of the random color schemes.')
         print('You can type "roll" to randomize again.')
         print()
-        choice = literal_input(f'Your choice?', ['horizontal', 'vertical', 'roll'] + [f'random{i}' for i in range(random_count)], 'horizontal')
+        choice = literal_input(f'Your choice?', ['horizontal', 'vertical', 'roll', 'truerandom'] + [f'random{i}' for i in range(random_count)], 'horizontal')
 
         if choice == 'roll':
             arrangements = []
             continue
 
         # Save choice
-        arrangement_index = {k.lower(): ca for k, ca in hv_arrangements + arrangements}
+        arrangement_index = {k.lower(): ca for k, ca in hv_arrangements + arrangements + [("TrueRandom", ColorAlignment('random'))]}
         if choice in arrangement_index:
             color_alignment = arrangement_index[choice]
         else:
@@ -466,6 +476,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument('-V', '--version', dest='version', action='store_true', help=f'Check version')
     parser.add_argument('--june', action='store_true', help=f'Show pride month easter egg')
     parser.add_argument('--debug', action='store_true', help=f'Debug mode')
+    parser.add_argument('-r', '--random-alignment', action='store_true', help=color(f'Use a fresh random color alignment every time, independent of config'))
 
     parser.add_argument('--distro', '--test-distro', dest='distro', help=f'Test for a specific distro')
     parser.add_argument('--ascii-file', help='Use a specific file for the ascii art')
@@ -612,7 +623,8 @@ def run():
             asc = Path(args.ascii_file).read_text("utf-8")
         else:
             asc = get_distro_ascii()
-        asc = config.color_align.recolor_ascii(asc, preset)
+        color_align: ColorAlignment = get_random_alignment(preset, asc) if (args.random_alignment or config.color_align.mode == "random") else config.color_align
+        asc = color_align.recolor_ascii(asc, preset)
         neofetch_util.run(asc, config.backend, config.args or '')
     except Exception as e:
         print(f'Error: {e}')
