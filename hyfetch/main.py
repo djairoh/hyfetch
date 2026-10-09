@@ -359,6 +359,7 @@ def create_config() -> Config:
 
         print_title_prompt("Let's choose a color arrangement!")
         printc(f'You can choose standard horizontal or vertical alignment, or use one of the random color schemes.')
+        printc(f'Additionally, \'truerandom\' will generate a fresh random color scheme every time.')
         print('You can type "roll" to randomize again.')
         print()
         choice = literal_input(f'Your choice?', ['horizontal', 'vertical', 'roll', 'truerandom'] + [f'random{i}' for i in range(random_count)], 'horizontal')

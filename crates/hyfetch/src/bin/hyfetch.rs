@@ -1221,7 +1221,7 @@ fn create_config(
         }
 
         print_title_prompt(option_counter, "Let's choose a color arrangement!");
-        println!("You can choose standard horizontal or vertical alignment, or use one of the random color schemes.\nAdditionally 'truerandom' will generate a fresh random coloru scheme every time.\nYou can type \"roll\" to randomize again.\n");
+        println!("You can choose standard horizontal or vertical alignment, or use one of the random color schemes.\nAdditionally 'truerandom' will generate a fresh random color scheme every time.\nYou can type \"roll\" to randomize again.\n");
         let mut opts: Vec<Cow<str>> = ["horizontal", "vertical", "roll", "truerandom"].map(Into::into).into();
         opts.extend((0..random_count).map(|i| format!("random{i}").into()));
         let choice = literal_input("Your choice?", &opts[..], "horizontal", true, color_mode)
